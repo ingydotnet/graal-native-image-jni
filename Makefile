@@ -1,39 +1,62 @@
-GRAALVM = $(HOME)/graalvm-ce-19.2.1
+SHELL := bash
+
+ROOT=$(shell pwd)
+
+export JAVA_HOME := $(GRAALVM)
+export PATH := $(ROOT):$(JAVA_HOME)/bin:$(PATH)
+export LD_LIBRARY_PATH := $(ROOT)
+
+
+test: build test-jar test-native
+
+build: helloworld libHelloWorld.so
+	@echo
+
+test-jar: HelloWorld.jar libHelloWorld.so
+	@echo '*** Testing $@'
+	java -jar $<
+	@echo
+
+test-native: helloworld libHelloWorld.so
+	@echo '*** Testing $@'
+	$<
+	@echo
 
 clean:
-	-rm src/*.class
-	-rm src/*.h
-	-rm *.jar
-	-rm *.so
-	-rm helloworld
+	$(RM) src/*.class
+	$(RM) src/*.h
+	$(RM) *.jar
+	$(RM) *.so
+	$(RM) helloworld
+	$(RM) -r reports
 
-src/HelloWorld.class: src/HelloWorld.java
-	javac src/HelloWorld.java
 
-src/HelloWorld.h: src/HelloWorld.java
-	cd src && javah -jni HelloWorld
-
-libHelloWorld.so: src/HelloWorld.h src/HelloWorld.c
-	gcc -shared -Wall -Werror -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux -o libHelloWorld.so -fPIC src/HelloWorld.c
-
-HelloWorld.jar: src/HelloWorld.class src/manifest.txt
-	cd src && jar cfm ../HelloWorld.jar manifest.txt HelloWorld.class
-
-run-jar: HelloWorld.jar libHelloWorld.so
-	LD_LIBRARY_PATH=./ java -jar HelloWorld.jar
-
-helloworld: HelloWorld.jar libHelloWorld.so
+helloworld: HelloWorld.jar
 	$(GRAALVM)/bin/native-image \
-		-jar HelloWorld.jar \
-		-H:Name=helloworld \
-		-H:+ReportExceptionStackTraces \
-		-H:ConfigurationFileDirectories=config-dir \
-		--initialize-at-build-time \
+		-jar $< \
+		-H:Name=$@ \
 		--verbose \
 		--no-fallback \
 		--no-server \
 		"-J-Xmx1g" \
-		-H:+TraceClassInitialization -H:+PrintClassInitialization
+		--initialize-at-build-time \
+		-H:+ReportExceptionStackTraces \
+		-H:ConfigurationFileDirectories=config-dir \
+		-H:+PrintClassInitialization
 
-run-native: helloworld libHelloWorld.so
-	LD_LIBRARY_PATH=./ ./helloworld
+HelloWorld.jar: src/HelloWorld.class src/manifest.txt
+	cd src && jar cfm ../HelloWorld.jar manifest.txt HelloWorld.class
+
+src/HelloWorld.class: src/HelloWorld.java
+	javac $<
+
+libHelloWorld.so: src/HelloWorld.h src/HelloWorld.c
+	gcc -shared -Wall -Werror \
+		-I$(JAVA_HOME)/include \
+		-I$(JAVA_HOME)/include/linux \
+		-o libHelloWorld.so \
+		-fPIC \
+		src/HelloWorld.c
+
+src/HelloWorld.h: src/HelloWorld.java
+	cd src && javac -h $(PWD)/src HelloWorld.java

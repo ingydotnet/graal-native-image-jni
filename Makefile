@@ -6,57 +6,65 @@ export JAVA_HOME := $(GRAALVM)
 export PATH := $(ROOT):$(JAVA_HOME)/bin:$(PATH)
 export LD_LIBRARY_PATH := $(ROOT)
 
+NAME := HelloWorld
+APP  := helloworld
+
 
 test: build test-jar test-native
 
-build: helloworld libHelloWorld.so
+build: lib$(NAME).so $(APP)
 	@echo
 
-test-jar: HelloWorld.jar libHelloWorld.so
+test-jar: lib$(NAME).so $(NAME).jar
 	@echo '*** Testing $@'
-	java -jar $<
+	java -jar $(word 2,$^)
 	@echo
 
-test-native: helloworld libHelloWorld.so
+test-native: lib$(NAME).so $(APP)
 	@echo '*** Testing $@'
-	$<
+	$(word 2,$^)
 	@echo
 
 clean:
-	$(RM) src/*.class
-	$(RM) src/*.h
-	$(RM) *.jar
-	$(RM) *.so
-	$(RM) helloworld
+	$(RM) src/*.class src/*.h *.jar *.so $(APP)
 	$(RM) -r reports
 
 
-helloworld: HelloWorld.jar
+$(APP): $(NAME).jar
 	$(GRAALVM)/bin/native-image \
-		-jar $< \
-		-H:Name=$@ \
-		--verbose \
-		--no-fallback \
-		--no-server \
-		"-J-Xmx1g" \
-		--initialize-at-build-time \
-		-H:+ReportExceptionStackTraces \
-		-H:ConfigurationFileDirectories=config-dir \
-		-H:+PrintClassInitialization
+	  -jar $< \
+	  -o $@
 
-HelloWorld.jar: src/HelloWorld.class src/manifest.txt
-	cd src && jar cfm ../HelloWorld.jar manifest.txt HelloWorld.class
+# This way with, all these other arguments (surprisingly) seem to have no
+# effect (in 2024).
+# Everything iseems to work to work fine without them.
 
-src/HelloWorld.class: src/HelloWorld.java
+# $(APP): $(NAME).jar
+# 	$(GRAALVM)/bin/native-image \
+# 	  -jar $< \
+# 	  -H:Name=$@ \
+# 	  --verbose \
+# 	  --no-fallback \
+# 	  --no-server \
+# 	  "-J-Xmx1g" \
+# 	  --initialize-at-build-time \
+# 	  -H:+ReportExceptionStackTraces \
+# 	  -H:ConfigurationFileDirectories=config-dir \
+# 	  -H:+PrintClassInitialization
+
+%.jar: src/%.class src/manifest.txt
+	cd src && jar cfm ../$@ manifest.txt $(<:src/%=%)
+
+src/%.class: src/%.java
 	javac $<
 
-libHelloWorld.so: src/HelloWorld.h src/HelloWorld.c
+lib%.so: src/%.c src/%.h
 	gcc -shared -Wall -Werror \
 		-I$(JAVA_HOME)/include \
 		-I$(JAVA_HOME)/include/linux \
-		-o libHelloWorld.so \
+		-o $@ \
 		-fPIC \
-		src/HelloWorld.c
+		$<
 
-src/HelloWorld.h: src/HelloWorld.java
-	cd src && javac -h $(PWD)/src HelloWorld.java
+src/%.h: src/%.java
+	cd src && javac -h $(PWD)/src $(<:src/%=%)

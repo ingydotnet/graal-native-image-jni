@@ -1,0 +1,7 @@
+{
+  "resources": {
+    "includes": [
+      {"pattern": "lib/libhelloworld.1.2.3.so"}
+    ]
+  }
+}

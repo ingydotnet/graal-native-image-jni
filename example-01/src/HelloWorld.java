@@ -7,20 +7,26 @@ class HelloWorld {
     //     System.loadLibrary("HelloWorld");
     // }
 
-    private native void print();
+    private native void greet();
 
     // entry point
     public static void main(String[] args) {
-        String path = System.getProperty("java.library.path");
-        System.setProperty("java.library.path", String.format("%s:src/../lib", path));
-        System.out.printf("java.library.path: %s\n", System.getProperty("java.library.path"));
-
-
-
-
         // Instead we System.loadLibrary() inside the execution path to load
         // the library file.
         System.loadLibrary("helloworld.1.2.3");
-        new HelloWorld().print();
+        new HelloWorld().greet();
     }
 }
+
+// System.setProperty(
+//     "java.library.path",
+//     String.format(
+//         "%s:%s",
+//         "some/path",
+//         System.getProperty("java.library.path")
+//     )
+// );
+// System.out.printf(
+//     "java.library.path: %s\n",
+//     System.getProperty("java.library.path")
+// );

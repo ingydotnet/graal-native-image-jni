@@ -1,9 +1,10 @@
-# graal-native-image-jni
+graal-native-image-jni
+======================
 
-The smallest possible example to test GraalVM's native-image JNI support.
+Minimal examples of JNI with GraalVM native-image
 
 
-### Synopsis
+## Synopsis
 
 ```
 $ make test
@@ -19,36 +20,17 @@ Hello world; this is C talking!
 ```
 
 
-### Insight
+## Prerequisites
 
-In order for native-image to successfuly load a c library to execute, it must
-run the `System.loadLibrary()` call at runtime, not at build time.
+You only need a very basic Linux environment to use this repo.
 
+If you have the following basic tools, then `make test` should just work:
 
-### Method 1: Put loadLibrary in the execution path
-
-This is the version we have done.
-By putting loadLibrary inside the `main` method, the library is loaded at run
-time.
-With this setup we can compile with `--initialize-at-build-time` and everything
-will work.
-
-
-### Method 2: Put loadLibrary in static class initializer and use --initialize-at-run-time
-
-Sometimes you don't have control over where you call loadLibrary from.
-Often existing code places it in the class's static initializer block.
-In this case the library is loaded at build time, but then when the final
-artifact is run, the linked code cannot be found and the programme crashes with
-a `java.lang.UnsatisfiedLinkError` exception.
-
-When you place the loadLibrary call within a static block of a class, you must
-specify to `native-image` that your class should be initialized at runtime.
-
-
-## Requirements
-
- * Linux, GNU make, bash, curl, gcc
+* `bash`
+  * Just installed. Doesn't need to be your shell.
+* GNU `make`
+* `curl`
+* `gcc`
 
 
 ## Overview
@@ -82,3 +64,39 @@ specify to `native-image` that your class should be initialized at runtime.
 * `make realclean`
 
   Also remove graalvm download
+
+
+## Continuation of Work
+
+This repo was originally a fork of
+https://github.com/retrogradeorbit/graal-native-image-jni
+but it diverged enough to become its own thing.
+
+Below are notes from there:
+
+
+### Insight
+
+In order for native-image to successfuly load a c library to execute, it must
+run the `System.loadLibrary()` call at runtime, not at build time.
+
+
+### Method 1: Put loadLibrary in the execution path
+
+This is the version we have done.
+By putting loadLibrary inside the `main` method, the library is loaded at run
+time.
+With this setup we can compile with `--initialize-at-build-time` and everything
+will work.
+
+
+### Method 2: Put loadLibrary in static class initializer and use --initialize-at-run-time
+
+Sometimes you don't have control over where you call loadLibrary from.
+Often existing code places it in the class's static initializer block.
+In this case the library is loaded at build time, but then when the final
+artifact is run, the linked code cannot be found and the programme crashes with
+a `java.lang.UnsatisfiedLinkError` exception.
+
+When you place the loadLibrary call within a static block of a class, you must
+specify to `native-image` that your class should be initialized at runtime.

@@ -31,33 +31,6 @@ sysclean: clean
 	$(RM) $(GRAALVM_TAR)
 	$(RM) -r $(GRAALVM_HOME)
 
-ifeq (1,$(USE_NATIVE_OPTS))
-NATIVE_OPTS := \
-  --verbose \
-  --native-image-info \
-  --no-fallback \
-  --initialize-at-build-time \
-  --enable-preview \
-  --enable-url-protocols=https \
-  -march=compatibility \
-  -H:ReflectionConfigurationFiles=reflection.json \
-  -H:+ReportExceptionStackTraces \
-  -H:+PrintClassInitialization \
-  -H:Log=registerResource: \
-  "-J-Xmx3g"
-endif
-
-ifeq (2,$(USE_NATIVE_OPTS))
-NATIVE_OPTS := \
-  -H:IncludeResources=".*libhelloworld\.1\.2\.3\.so" \
-  "-J-Xmx3g"
-endif
-
-ifeq (3,$(USE_NATIVE_OPTS))
-NATIVE_OPTS := \
-  -H:IncludeResources=".*libhelloworld\.1\.2\.3\.so" \
-  "-J-Xmx3g"
-endif
 
 # Using none of the options above (or using all of them) both seem to work as
 # of March 2025.

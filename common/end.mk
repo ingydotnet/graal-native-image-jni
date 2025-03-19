@@ -6,6 +6,7 @@ LIB  := lib/lib$(name).$(VER).so
 
 
 default:
+	@echo $(PATH)
 
 test: build test-jar test-native
 
@@ -38,8 +39,11 @@ sysclean: clean
 $(NATIVE): $(JAR)
 	native-image $(NATIVE_OPTS) -Ob -jar $< -o $@
 
-$(JAR): src/$(NAME).class src/manifest.txt $(LIB)
-	cd src && jar cfm ../$@ manifest.txt $(NAME).class
+$(JAR):: src/$(NAME).class src/manifest.txt $(LIB)
+	( \
+	  cd src && \
+	  jar cfm ../$@ manifest.txt $(NAME).class \
+	)
 
 src/%.class: src/%.java $(GRAALVM_HOME)
 	javac $<

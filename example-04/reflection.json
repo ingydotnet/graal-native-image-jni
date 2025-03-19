@@ -1,0 +1,11 @@
+[
+  {
+    "name": "java.lang.ClassLoader",
+    "allDeclaredConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicConstructors": true,
+    "allPublicFields": true,
+    "allPublicMethods": true
+  }
+]

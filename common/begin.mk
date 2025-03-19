@@ -1,8 +1,8 @@
 SHELL := bash
 
-ROOT := $(shell cd -P .. && pwd -P)
+ROOT ?= $(shell cd -P .. && pwd -P)
 BASE := $(shell pwd -P)
-COMMON := $(ROOT)/common
+COMMON ?= $(ROOT)/common
 
 include $(COMMON)/graalvm.mk
 

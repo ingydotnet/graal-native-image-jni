@@ -1,4 +1,4 @@
-example-03
+example-04
 ==========
 
 https://www.graalvm.org/latest/reference-manual/native-image/guides/include-resources/

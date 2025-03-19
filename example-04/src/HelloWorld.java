@@ -3,16 +3,87 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 class HelloWorld {
+    private static File tempdir;
     private native void greet();
+
     public static void main(String[] args) {
         Path currentRelativePath = Paths.get("");
         String cwd = currentRelativePath.toAbsolutePath().toString();
         String path = cwd + "/lib/libhelloworld.1.2.3.so";
-        if (Files.notExists(Paths.get(path))) {
-            //System.out.printf("ppppppppppppppppppppppppp");
-            path = "/lib/libhelloworld.1.2.3.so";
+
+        if (Files.exists(Paths.get(path))) {
+            System.load(path);
+            new HelloWorld().greet();
+            return;
         }
+
+        path = "libhelloworld.1.2.3.so";
+
         System.load(path);
+
         new HelloWorld().greet();
+    }
+
+    public static void loadLibraryFromResource(String path) throws IOException {
+        System.out.printf("1: >>>%s<<<\n", path);
+
+        tempdir = createTempDirectory("rapidyamllibloader");
+        tempdir.deleteOnExit();
+
+        System.out.printf("2: >>>%s<<<\n", tempdir);
+
+//       File temp = new File(tempdir, filename);
+        File temp = new File(tempdir, path);
+
+        System.out.printf("3: >>>%s<<<\n", path);
+        try (InputStream is = NativeLibLoader.class.getResourceAsStream(path)) {
+            Files.copy(is, temp.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+        catch (IOException e) {
+            temp.delete();
+            throw e;
+        }
+        catch (NullPointerException e) {
+            temp.delete();
+            throw new FileNotFoundException(
+                "File " + path + " was not found inside JAR.");
+        }
+        System.out.printf("4: >>>%s<<<\n", path);
+
+        try {
+            System.load(temp.getAbsolutePath());
+        }
+        finally {
+            if (isPosixCompliant()) {
+                temp.delete();
+            }
+            else {
+                temp.deleteOnExit();
+            }
+        }
+    }
+
+    private static boolean isPosixCompliant() {
+        try {
+            return FileSystems.getDefault()
+                    .supportedFileAttributeViews()
+                    .contains("posix");
+        }
+        catch (FileSystemNotFoundException
+                | ProviderNotFoundException
+                | SecurityException e) {
+            return false;
+        }
+    }
+
+    private static File createTempDirectory(String prefix) throws IOException {
+        String tempDir = System.getProperty("java.io.tmpdir");
+        File generatedDir = new File(tempDir, prefix + System.nanoTime());
+
+        if (!generatedDir.mkdir())
+            throw new IOException(
+                "Failed to create temp directory " + generatedDir.getName());
+
+        return generatedDir;
     }
 }

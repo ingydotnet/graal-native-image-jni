@@ -7,3 +7,4 @@ reports/
 *.h
 *.html
 out.txt
+.yamllm/
